@@ -78,7 +78,23 @@ signSubgraphs d ts =
   let ts' = Set.fromList ts
   in [x | x <- allSubgraphs d, isBCD x, Set.member (tailsNr x) ts']
      
+{-
+-- getter for cycles
+cycleGet :: [a] -> Int -> a
+cycleGet l n = l !! (n `mod` (length l))
 
+-- count number of cycles (loops) in the diagram
+-- TODO: check if loops (self-connected vertices) are handled correctly
+numCycles :: Diagram -> Int
+numCycles d =
+  let cs = cyclesIn' d 
+      (s,l) = partition (\c -> (length c) == 2) cs
+      d' = foldl removeEdge d s where
+        removeEdge dia [x,y] = delEdge (x,y) dia
+      s' = [x | x <- cyclesIn' d', (length x) == 2]
+  in length cs
+-}
+     
 main = do
   putStrLn "Hello, World!"
 
