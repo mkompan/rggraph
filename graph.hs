@@ -60,7 +60,9 @@ removeOne dia n =
       fixTails (Just ctxs) d = foldl addTail d adj where
         (adj,_,_,_) = ctxs
         addTail d_ (_,0) = d_
-        addTail d_ (_,n) = insEdge (0,n,prop) $ insEdge (n,0,prop) d_
+        addTail d_ (_,k) | k == n = d_ -- ignore 1-loops
+                         | otherwise =
+                           insEdge (0,k,prop) $ insEdge (k,0,prop) d_
   in fixTails mctxs d'
 
 -- make subgraph by removing list of nodes
