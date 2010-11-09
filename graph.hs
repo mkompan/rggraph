@@ -88,7 +88,7 @@ cycleEq c1 c2 | length c1 /= length c2 = False
                 isInfixOf c1 c2' || isInfixOf (reverse c1) c2' where
                   c2' = c2 ++ c2
                   
--- compute the cycles (loops) in the diagram
+-- compute the cycles in the diagram
 -- cyclesIn' function from Graphalyze library doesn't suit our needs
 -- because of the following:
 -- a. It returns long (3 or more vertices) cycles twice (forward and backward)
@@ -98,20 +98,14 @@ cycleEq c1 c2 | length c1 /= length c2 = False
 -- of the short cycle are on the long one it doesn't return symmetric
 -- long cycle (with the same vertices but different edge)
 -- d. It doesn't return 1-loops (self-connected vertices)
+-- for problems b.-d. we will need a list of all edges
+-- we are purely functional, so "edges d" are always the same
+-- so we can use index of the element in this list to
+-- distinguish edges connecting the same vertices
 cycles :: Diagram -> [([Node],[Int])]
 cycles d =
   let d' = delNode 0 d
-      l = [x | x <- cyclesIn' d', length x > 2] 
-      -- handle problem a. by removing identical cycles from l
-      l' = nubBy cycleEq l
-      -- for other problems we need a list of all edges
-      -- we are purely functional, so "edges d" are always the same
-      -- so we can use index of the element in this list to
-      -- distinguish edges connecting the same vertices
       e = edges d'
-      -- handle problem c. by constructing index representation for long cycles
-      l'' = concatMap f l' where
-        f x = zip (repeat x) (flip edgesToIndices d' . cycleToEdges $ x)
       -- find and count 1-loops
       ledgs = [x | x <- e, fst x == snd x]
       lps = map (\l@((v,_):xs) -> (v,(div 2) . length $ l)) (group ledgs)
@@ -122,11 +116,22 @@ cycles d =
       s = filter ((>1) . length) $ group [x | x <- e, fst x < snd x]
       s' = concatMap f s where
         f x = zip (repeat c) [[e1,e2] | e1 <- x', e2 <- x', e1 < e2] where
-          x' = elemIndices (head x) e
+          x' = elemIndices (head x) (edges d)
           c = [a,b]
           (a,b) = head x
-  in lps' ++ s' ++ l''
+  in lps' ++ s' ++ (cyclesLong d)
 
+-- return "long" cycles (counting cycle with the same vertices only once
+-- even if there are more than one edge)
+cyclesLong' d =
+  let d' = delNode 0 d
+  in nubBy cycleEq [x | x <- cyclesIn' d', length x > 2]
+     
+-- and now add the missing "long" cycles (along with their respective
+-- edge indices representation)
+cyclesLong d = concatMap f (cyclesLong' d) where
+  f x = zip (repeat x) (flip edgesToIndices d . cycleToEdges $ x)
+      
 -- convert cycle from vertex to edge representation
 cycleToEdges c =
   let (res,_) = foldr (\x (l,y) -> ((x,y):l,x)) ([],head c) c
