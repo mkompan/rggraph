@@ -4,6 +4,7 @@ import Data.Number.Symbolic
 import Char
 import Data.List
 import qualified Data.Set as Set
+import Control.Monad
 
 type Modifier = [Char]
 type Modified a = (a,[Modifier])
@@ -78,23 +79,64 @@ signSubgraphs d ts =
   let ts' = Set.fromList ts
   in [x | x <- allSubgraphs d, isBCD x, Set.member (tailsNr x) ts']
      
-{-
--- getter for cycles
-cycleGet :: [a] -> Int -> a
-cycleGet l n = l !! (n `mod` (length l))
+-- some functions to deal with cycles in diagrams
 
--- count number of cycles (loops) in the diagram
--- TODO: check if loops (self-connected vertices) are handled correctly
-numCycles :: Diagram -> Int
-numCycles d =
-  let cs = cyclesIn' d 
-      (s,l) = partition (\c -> (length c) == 2) cs
-      d' = foldl removeEdge d s where
-        removeEdge dia [x,y] = delEdge (x,y) dia
-      s' = [x | x <- cyclesIn' d', (length x) == 2]
-  in length cs
--}
-     
+-- test if cycles are the same
+cycleEq :: (Eq a) => [a] -> [a] -> Bool
+cycleEq c1 c2 | length c1 /= length c2 = False
+              | otherwise =
+                isInfixOf c1 c2' || isInfixOf (reverse c1) c2' where
+                  c2' = c2 ++ c2
+                  
+-- compute the cycles (loops) in the diagram
+-- cyclesIn' function from Graphalyze library doesn't suit our needs
+-- because of the following:
+-- a. It returns long (3 or more vertices) cycles twice (forward and backward)
+-- b. It returns short (2 vertices) cycle for _every_ pair of
+-- connected nodes
+-- c. For every pair of short and long cycles such that both vertices
+-- of the short cycle are on the long one it doesn't return symmetric
+-- long cycle (with the same vertices but different edge)
+-- d. It doesn't return 1-loops (self-connected vertices)
+cycles :: Diagram -> [([Node],[Int])]
+cycles d =
+  let d' = delNode 0 d
+      l = [x | x <- cyclesIn' d', length x > 2] 
+      -- handle problem a. by removing identical cycles from l
+      l' = nubBy cycleEq l
+      -- for other problems we need a list of all edges
+      -- we are purely functional, so "edges d" are always the same
+      -- so we can use index of the element in this list to
+      -- distinguish edges connecting the same vertices
+      e = edges d'
+      -- handle problem c. by constructing index representation for long cycles
+      l'' = concatMap f l' where
+        f x = zip (repeat x) (flip edgesToIndices d' . cycleToEdges $ x)
+      -- find and count 1-loops
+      ledgs = [x | x <- e, fst x == snd x]
+      lps = map (\l@((v,_):xs) -> (v,(div 2) . length $ l)) (group ledgs)
+      lps' = concatMap f lps where
+        f (v,n) = zip (repeat [v]) loopEdgs where
+          loopEdgs = map (\x -> [x]) (take n (elemIndices (v,v) e))
+      -- short loops (removing "backward" edges)
+      s = filter ((>1) . length) $ group [x | x <- e, fst x < snd x]
+      s' = concatMap f s where
+        f x = zip (repeat c) [[e1,e2] | e1 <- x', e2 <- x', e1 < e2] where
+          x' = elemIndices (head x) e
+          c = [a,b]
+          (a,b) = head x
+  in lps' ++ s' ++ l''
+
+-- convert cycle from vertex to edge representation
+cycleToEdges c =
+  let (res,_) = foldr (\x (l,y) -> ((x,y):l,x)) ([],head c) c
+  in res
+
+-- convert cycle from edges written as (v1,v2) to representation
+-- using indices in "edges diagram" list (we may get more than one)
+edgesToIndices es d = foldl findEdges [[]] (reverse es) where
+  findEdges t x = [a:b | b <- t, a <- elemIndices x (edges d)]
+
 main = do
   putStrLn "Hello, World!"
 
