@@ -129,6 +129,15 @@ cyclesShort d =
       zip (repeat [a,b]) [[e1,e2] | e1 <- i, e2 <- i, e1 < e2] where  
         i = elemIndices p (edges d)
 
+-- independent set of short cycles
+cyclesShort' d =
+  concatMap shortCycles2V' (shortCyclesVertices d) where
+    shortCycles2V' p@(a,b) =
+      zip (repeat [a,b]) cs where 
+        (cs,_) = foldl makePairs ([],head es) (tail es) where
+          es = sort $ elemIndices p (edges d)
+          makePairs (l,a) b = ([a,b]:l,b)
+
 -- return "long" cycles (counting cycle with the same vertices only once
 -- even if there are more than one edge)
 cyclesLong' d =
