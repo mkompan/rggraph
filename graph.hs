@@ -137,6 +137,38 @@ cycleToEdges c =
 edgesToIndices es d = foldl findEdges [[]] (reverse es) where
   findEdges t x = [a:b | b <- t, a <- elemIndices x (edges d)]
 
+-- find a common path in two cycles (which can be removed to form a
+-- new cycle. Works for long (more than 2 vertices) cycles.
+-- if there are more than one common paths (or even a path and a
+-- point outside) then zero path is returned
+cyclesCommonPath c1 c2 =
+  [x | x <- paths, x `isInfixOf` c1', x `isInfixOf` c2'] where
+    paths = permutations $ intersect c1 c2 
+    c1' = c1 ++ c1
+    c2' = c2 ++ c2
+
+-- make a sum of two cycles
+cyclesSum c1 [] = c1
+cyclesSum [] c2 = c2
+cyclesSum c1 c2 | null $ cyclesCommonPath c1 c2 = []
+                | otherwise = c1' ++ [b] ++ c2' where
+  c1' = takeWhile (/= b) $ dropWhile (/= e) (c1 ++ c1)
+  c2' = tail $ takeWhile (/= b) $ dropWhile (/= e) (c2 ++ c2)
+  b = head $ head cp -- double 'head' because of cyclesCommonPath returning list of lists, should we fix it?
+  e = last $ head cp
+  cp = cyclesCommonPath c1 c2
+
+-- find a set of independent cycles (works for long cycles)
+cyclesBasis' l = res where
+  (res,_) = foldl addCycle ([],[[]]) l where
+    addCycle (b,cs) c | not $ null $ intersectBy cycleEq cs [c] = (b,cs)
+                      | otherwise =
+      let cs' = [cyclesSum x c | x <- cs, not $ null $ cyclesSum x c] ++
+                [cyclesSum x (reverse c) | x <- cs, not $ null $ cyclesSum x (reverse c)] ++
+                cs
+          cs'' = nubBy cycleEq cs'
+      in (c:b,cs'')
+
 main = do
   putStrLn "Hello, World!"
 
