@@ -28,15 +28,18 @@ vert :: DNode
 vert = INode (("vert",0),[])
 
 contextsFromStr s =
-  let (res,_,_) = foldl (flip parseChar) ([],[],1) s
+  let (res,_,_,_) = foldl (flip parseChar) ([],[],[],1) s
   in res
 
 
-parseChar '-' (ctxs,edgs,nr) = ((edgs,nr,vert,edgs) : ctxs,[],nr+1)
-parseChar 'e' (ctxs,edgs,nr) = (ctxs,(prop,0):edgs,nr)
-parseChar c (ctxs,edgs,nr) =
+parseChar '-' (ctxs,edgsIn,edgsOut,nr) = ((edgsIn,nr,vert,edgsOut) : ctxs,[],[],nr+1)
+parseChar 'e' (ctxs,edgsIn,edgsOut,nr) = (ctxs,(prop,0):edgsIn,(prop,0):edgsOut,nr)
+parseChar c (ctxs,edgsIn,edgsOut,nr) =
   let n = digitToInt c
-  in (ctxs,(prop,n+1):edgs,nr)
+      edgsIn' = (prop,n+1):edgsIn
+      edgsOut' | nr == n+1 = edgsOut
+               | otherwise = (prop,n+1):edgsOut
+  in (ctxs,edgsIn',edgsOut',nr)
 
 
 buildDiagramStr s = foldl (flip (&)) dia_empty (contextsFromStr s)
@@ -104,13 +107,14 @@ cycleEq c1 c2 | length c1 /= length c2 = False
 -- we are purely functional, so "edges d" are always the same
 -- so we can use index of the element in this list to
 -- distinguish edges connecting the same vertices
+-- TODO: test it with 1-loops!!!
 cycles :: Diagram -> [([Node],[Int])]
 cycles d =
   let d' = delNode 0 d
       e = edges d'
       -- find and count 1-loops
       ledgs = [x | x <- e, fst x == snd x]
-      lps = map (\l@((v,_):xs) -> (v,(div 2) . length $ l)) (group ledgs)
+      lps = map (\l@((v,_):xs) -> (v,length $ l)) (group ledgs)
       lps' = concatMap f lps where
         f (v,n) = zip (repeat [v]) loopEdgs where
           loopEdgs = map (\x -> [x]) (take n (elemIndices (v,v) e))
