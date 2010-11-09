@@ -204,6 +204,20 @@ cyclesBasis' l = res where
           cs'' = nubBy cycleEq cs'
       in (c:b,cs'')
 
+-- now build the basis cycles for the diagram. 1-loops are always independent
+-- so we can take them as is. Then we take as much independent short
+-- cycles as we can. After that we need to add independent set of
+-- long cycles (not including ones that has the same vertices but
+-- different edges).
+cyclesBasis d = (cyclesLoops d) ++ (cyclesShort' d) ++ longCs where
+  longCs = zip cs (map makeIndexRepr cs) where
+    cs = cyclesBasis' $ cyclesLong' d
+    makeIndexRepr = head . (flip edgesToIndices d) . cycleToEdges -- take any possible path
+
+-- count number of loops (independent cycles, not 1-loops!!) in diagram
+nrLoops :: Diagram -> Int
+nrLoops = length . cyclesBasis
+
 main = do
   putStrLn "Hello, World!"
 
