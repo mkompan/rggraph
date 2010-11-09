@@ -109,23 +109,25 @@ cycleEq c1 c2 | length c1 /= length c2 = False
 -- distinguish edges connecting the same vertices
 -- TODO: test it with 1-loops!!!
 cycles :: Diagram -> [([Node],[Int])]
-cycles d =
-  let d' = delNode 0 d
-      e = edges d'
-      -- find and count 1-loops
-      ledgs = [x | x <- e, fst x == snd x]
-      lps = map (\l@((v,_):xs) -> (v,length $ l)) (group ledgs)
-      lps' = concatMap f lps where
-        f (v,n) = zip (repeat [v]) loopEdgs where
-          loopEdgs = map (\x -> [x]) (take n (elemIndices (v,v) e))
-      -- short loops (removing "backward" edges)
-      s = filter ((>1) . length) $ group [x | x <- e, fst x < snd x]
-      s' = concatMap f s where
-        f x = zip (repeat c) [[e1,e2] | e1 <- x', e2 <- x', e1 < e2] where
-          x' = elemIndices (head x) (edges d)
-          c = [a,b]
-          (a,b) = head x
-  in lps' ++ s' ++ (cyclesLong d)
+cycles d = (cyclesLoops d) ++ (cyclesShort d) ++ (cyclesLong d)
+
+-- "short" cycles. For each pair of vertices (a,b) with n edges
+-- between them there are n(n-1)/2 cycles and n-1 of them are
+-- independent
+
+-- get list of pairs of vertices which have more than 1 edge between them
+shortCyclesVertices d =
+  map head [x | x <- group es, length x > 1] where
+    es = [x | x <- edges d', fst x < snd x] -- condition removes duplicate edges and 1-loops
+    d' = delNode 0 d
+
+-- all short cycles. for every pair of vertices we take we get
+-- a cycle for any (unordered) combination of edges
+cyclesShort d =
+  concatMap shortCycles2V (shortCyclesVertices d) where
+    shortCycles2V p@(a,b) =
+      zip (repeat [a,b]) [[e1,e2] | e1 <- i, e2 <- i, e1 < e2] where  
+        i = elemIndices p (edges d)
 
 -- return "long" cycles (counting cycle with the same vertices only once
 -- even if there are more than one edge)
@@ -138,6 +140,14 @@ cyclesLong' d =
 cyclesLong d = concatMap f (cyclesLong' d) where
   f x = zip (repeat x) (flip edgesToIndices d . cycleToEdges $ x)
       
+-- find 1-loops
+cyclesLoops d = concatMap f vsWithLoops where
+  vsWithLoops = nub [fst x | x <- edges d', fst x == snd x]
+  d' = delNode 0 d
+  f v = zip (repeat [v]) loopEdgs where
+    loopEdgs = map (\x -> [x]) (elemIndices (v,v) e)
+    e = edges d
+
 -- convert cycle from vertex to edge representation
 cycleToEdges c =
   let (res,_) = foldr (\x (l,y) -> ((x,y):l,x)) ([],head c) c
