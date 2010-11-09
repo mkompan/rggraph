@@ -142,20 +142,25 @@ edgesToIndices es d = foldl findEdges [[]] (reverse es) where
 -- if there are more than one common paths (or even a path and a
 -- point outside) then zero path is returned
 cyclesCommonPath c1 c2 =
-  [x | x <- paths, x `isInfixOf` c1', x `isInfixOf` c2'] where
-    paths = permutations $ intersect c1 c2 
-    c1' = c1 ++ c1
-    c2' = c2 ++ c2
+  let cps = [x | x <- paths, x `isInfixOf` c1', x `isInfixOf` c2'] where
+        paths = permutations $ intersect c1 c2 
+        c1' = c1 ++ c1
+        c2' = c2 ++ c2
+      res | null cps = []
+          | length cps > 1 = error "More than one common path. Bug?"
+          | otherwise = head cps
+  in res
 
 -- make a sum of two cycles
 cyclesSum c1 [] = c1
 cyclesSum [] c2 = c2
-cyclesSum c1 c2 | null $ cyclesCommonPath c1 c2 = []
+cyclesSum c1 c2 | null cp = []
+                | length cp == 1 = []
                 | otherwise = c1' ++ [b] ++ c2' where
   c1' = takeWhile (/= b) $ dropWhile (/= e) (c1 ++ c1)
   c2' = tail $ takeWhile (/= b) $ dropWhile (/= e) (c2 ++ c2)
-  b = head $ head cp -- double 'head' because of cyclesCommonPath returning list of lists, should we fix it?
-  e = last $ head cp
+  b = head cp
+  e = last cp
   cp = cyclesCommonPath c1 c2
 
 -- find a set of independent cycles (works for long cycles)
