@@ -218,6 +218,17 @@ cyclesBasis d = (cyclesLoops d) ++ (cyclesShort' d) ++ longCs where
 nrLoops :: Diagram -> Int
 nrLoops = length . cyclesBasis
 
+-- test if cycle lies inside subgraph
+-- we just need to test if all vertices of cycle belong to subgraph
+cycleLiesIn c d = null $ c \\ nodes d
+
+-- convert Bool to Int
+boolToInt True = 1
+boolToInt _ = 0
+
+-- count number of cycles from given set that lie inside a subgraph
+nrCyclesIn cs d = sum $ map (boolToInt . (flip cycleLiesIn d)) cs
+
 -- subsequences of length n
 subseqsN s n = [x | x <- subsequences s, length x == n]
 
