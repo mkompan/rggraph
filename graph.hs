@@ -218,6 +218,9 @@ cyclesBasis d = (cyclesLoops d) ++ (cyclesShort' d) ++ longCs where
 nrLoops :: Diagram -> Int
 nrLoops = length . cyclesBasis
 
+-- subsequences of length n
+subseqsN s n = [x | x <- subsequences s, length x == n]
+
 main = do
   putStrLn "Hello, World!"
 
