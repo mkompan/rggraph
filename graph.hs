@@ -3,8 +3,10 @@ import Data.Graph.Analysis
 import Data.Number.Symbolic
 import Char
 import Data.List
-import qualified Data.Set as Set
 import Control.Monad
+
+import Theory
+import Theory.Phi3
 
 type Modifier = [Char]
 type Modified a = (a,[Modifier])
@@ -78,11 +80,10 @@ allSubgraphs d = map (mkSubgraph d) ls where
   ls = [x | x <- tail $ subsequences [1..n], length x < (n-1)]
   n = (noNodes d) - 1
 
--- biconnected subgraphs with desired number of tails
-signSubgraphs :: Diagram -> [Int] -> [Diagram]
-signSubgraphs d ts =
-  let ts' = Set.fromList ts
-  in [x | x <- allSubgraphs d, isBCD x, Set.member (tailsNr x) ts']
+-- biconnected subgraphs with desired number of tails (taken from theory definition)
+signSubgraphs :: Theory -> Diagram -> [Diagram]
+signSubgraphs th d =
+  [x | x <- allSubgraphs d, isBCD x, (tailsNr x) `elem` (tailsSignDiagram th)]
      
 -- some functions to deal with cycles in diagrams
 
