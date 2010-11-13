@@ -223,12 +223,28 @@ nrLoops = length . cyclesBasis
 -- we just need to test if all vertices of cycle belong to subgraph
 cycleLiesIn c d = null $ c \\ nodes d
 
--- convert Bool to Int
-boolToInt True = 1
-boolToInt _ = 0
+-- test if cycle intersects (has common edge) with subgraph
+cycleIntersects c d = not $ null $ intersect (cycleToEdges c) (edges d)   
 
+-- internal cycles for subgraph (the ones that lie completely inside) 
+subgraphInternalCycles cs d =
+  [x | x <- cs, x `cycleLiesIn` d]
+
+-- external cycles for subgraph (the ones that go through it)
+subgraphExternalCycles cs d =
+  [x | x <- cs, x `cycleIntersects` d, not (x `cycleLiesIn` d)]
+  
 -- count number of cycles from given set that lie inside a subgraph
-nrCyclesIn cs d = sum $ map (boolToInt . (flip cycleLiesIn d)) cs
+nrCyclesIn cs d = length $ subgraphInternalCycles cs d
+
+-- cycle set is considered acceptable iff each subgraph has no less
+-- internal cycles than it's number of loops
+cyclesAcceptable' cs ds = 
+  all (\x -> nrCyclesIn cs x >= nrLoops x) ds
+  
+-- version that has theory and diagram as it's arguments instead
+-- of explicit list of subgraphs
+cyclesAcceptable th d cs = cyclesAcceptable' cs (signSubgraphs th d)
 
 -- subsequences of length n
 subseqsN s n = [x | x <- subsequences s, length x == n]
