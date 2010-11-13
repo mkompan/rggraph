@@ -242,6 +242,15 @@ subgraphExternalCycles cs d =
 -- count number of cycles from given set that lie inside a subgraph
 nrCyclesIn cs d = length $ subgraphInternalCycles cs d
 
+-- reverse cycle in edge representation
+cycleReverseE c = map (\((a,b),i) -> ((b,a),i)) c
+
+-- test if cycle set covers all edges of the diagram
+cyclesCoverGraph cs d = length (edges d') == length es where
+  d' = delNode 0 d
+  es = foldl1 union cs'
+  cs' = map (\x -> x ++ cycleReverseE x) cs
+  
 -- cycle set is considered acceptable iff each subgraph has no less
 -- internal cycles than it's number of loops
 cyclesAcceptable' cs ds = 
