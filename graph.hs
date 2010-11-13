@@ -104,12 +104,11 @@ cycleEq c1 c2 | length c1 /= length c2 = False
 -- of the short cycle are on the long one it doesn't return symmetric
 -- long cycle (with the same vertices but different edge)
 -- d. It doesn't return 1-loops (self-connected vertices)
--- for problems b.-d. we will need a list of all edges
--- we are purely functional, so "edges d" are always the same
--- so we can use index of the element in this list to
--- distinguish edges connecting the same vertices
+-- for problems b.-d. we use the representation in the form of
+-- the list of egdes, each represented as ((Node,Node),Index) where
+-- index is added to distinguish edges connecting the same vertices
 -- TODO: test it with 1-loops!!!
-cycles :: Diagram -> [([Node],[Int])]
+cycles :: Diagram -> [([Node],[(Edge,Int)])]
 cycles d = (cyclesLoops d) ++ (cyclesShort d) ++ (cyclesLong d)
 
 -- "short" cycles. For each pair of vertices (a,b) with n edges
@@ -126,18 +125,19 @@ shortCyclesVertices d =
 -- a cycle for any (unordered) combination of edges
 cyclesShort d =
   concatMap shortCycles2V (shortCyclesVertices d) where
-    shortCycles2V p@(a,b) =
-      zip (repeat [a,b]) [[e1,e2] | e1 <- i, e2 <- i, e1 < e2] where  
-        i = elemIndices p (edges d)
+    shortCycles2V e@(a,b) =
+      zip (repeat [a,b]) [[(e,i1),(e',i2)] | i1 <- [1..n], i2 <- [1..n], i1 < i2] where  
+        n = length [x | x <- edges d, x == e]
+        e' = (b,a)
 
 -- independent set of short cycles
 cyclesShort' d =
   concatMap shortCycles2V' (shortCyclesVertices d) where
-    shortCycles2V' p@(a,b) =
+    shortCycles2V' e@(a,b) =
       zip (repeat [a,b]) cs where 
-        (cs,_) = foldl makePairs ([],head es) (tail es) where
-          es = sort $ elemIndices p (edges d)
-          makePairs (l,a) b = ([a,b]:l,b)
+        cs = [[(e,i1),(e',i2)] | (i1,i2) <- zip [1..n] [2..n]]
+        n = length [x | x <- edges d, x == e]
+        e' = (b,a)
 
 -- return "long" cycles (counting cycle with the same vertices only once
 -- even if there are more than one edge)
@@ -148,14 +148,14 @@ cyclesLong' d =
 -- and now add the missing "long" cycles (along with their respective
 -- edge indices representation)
 cyclesLong d = concatMap f (cyclesLong' d) where
-  f x = zip (repeat x) (flip edgesToIndices d . cycleToEdges $ x)
+  f x = zip (repeat x) (flip edgesToIndexed d . cycleToEdges $ x)
       
 -- find 1-loops
 cyclesLoops d = concatMap f vsWithLoops where
   vsWithLoops = nub [fst x | x <- edges d', fst x == snd x]
   d' = delNode 0 d
   f v = zip (repeat [v]) loopEdgs where
-    loopEdgs = map (\x -> [x]) (elemIndices (v,v) e)
+    loopEdgs = edgesToIndexed [(v,v)] d
     e = edges d
 
 -- convert cycle from vertex to edge representation
@@ -163,10 +163,15 @@ cycleToEdges c =
   let (res,_) = foldr (\x (l,y) -> ((x,y):l,x)) ([],head c) c
   in res
 
--- convert cycle from edges written as (v1,v2) to representation
--- using indices in "edges diagram" list (we may get more than one)
-edgesToIndices es d = foldl findEdges [[]] (reverse es) where
-  findEdges t x = [a:b | b <- t, a <- elemIndices x (edges d)]
+-- add index to the edge to distinguish edges between the same
+-- vertices (may return more than one edge)
+edgeAddIndex e d = zip (repeat e) [1..n] where
+  n = length [x | x <- edges d, x == e] 
+  
+-- convert cycle from edges written as (v1,v2) to list of
+-- cycles with indexes added to edges
+edgesToIndexed es d = foldl findEdges [[]] (reverse es) where
+  findEdges t x = [a:b | b <- t, a <- edgeAddIndex x d]
 
 -- find a common path in two cycles (which can be removed to form a
 -- new cycle. Works for long (more than 2 vertices) cycles.
@@ -213,7 +218,7 @@ cyclesBasis' l = res where
 cyclesBasis d = (cyclesLoops d) ++ (cyclesShort' d) ++ longCs where
   longCs = zip cs (map makeIndexRepr cs) where
     cs = cyclesBasis' $ cyclesLong' d
-    makeIndexRepr = head . (flip edgesToIndices d) . cycleToEdges -- take any possible path
+    makeIndexRepr = head . (flip edgesToIndexed d) . cycleToEdges -- take any possible path
 
 -- count number of loops (independent cycles, not 1-loops!!) in diagram
 nrLoops :: Diagram -> Int
