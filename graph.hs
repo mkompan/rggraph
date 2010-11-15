@@ -7,6 +7,7 @@ import Control.Monad
 
 import Theory
 import Theory.Phi3
+import Theory.Phi4
 
 type Modifier = [Char]
 type Modified a = (a,[Modifier])
