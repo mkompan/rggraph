@@ -240,6 +240,10 @@ subgraphInternalCycles cs d =
 subgraphExternalCycles cs d =
   [x | x <- cs, x `cycleIntersects` d, not (x `cycleLiesIn` d)]
   
+-- the same but return indices of external cycles in the argument list
+subgraphExternalCycles' cs d =
+  [i | (i,c) <- zip [0..] cs, c `cycleIntersects` d, not (c `cycleLiesIn` d)]
+  
 -- count number of cycles from given set that lie inside a subgraph
 nrCyclesIn cs d = length $ subgraphInternalCycles cs d
 
@@ -263,6 +267,41 @@ cyclesAcceptable th d cs = cyclesAcceptable' cs (signSubgraphs th d)
 
 -- subsequences of length n
 subseqsN s n = [x | x <- subsequences s, length x == n]
+
+-- test edges for equality
+edgeEq e1 e2@((a,b),i) = e1 == e2 || e1 == e2' where
+  e2' = ((b,a),i)
+  
+-- penalty calculated for each subgraph
+-- for each subgraph there is a penalty for a complex incoming moment
+-- and a penalty proportional to a number of edges in subgraph
+-- with incoming moment
+penaltyForSubgraph cs d = pCmplIncM + pIncMLength where
+  pCmplIncM = 10 * (nIncM - 1) where
+    nIncM = length ecs
+  ecs = subgraphExternalCycles cs d
+  pIncMLength = 100 * nEdgsIncM where
+    nEdgsIncM = length $ intersect es cyclesEdgs where
+      es = concatMap (flip edgeAddIndex d) (edges d')
+      cyclesEdgs = foldl1 (unionBy edgeEq) (snd $ unzip ecs)
+      d' = delNode 0 d
+
+-- all possible paths for external moment
+allExtMomentPaths d = concatMap makePathsFromCycle ecs where
+  ecs = nubBy cycleEq [x | x <- cyclesIn' d, length x > 2, 0 `elem` x]
+  makePathsFromCycle c = zip (repeat c) paths where
+    paths = edgesToIndexed (cycleToEdges c) d
+
+-- find a set of cycles plus external moment path with a minimum penalty
+-- cycle set should cover all edges in diagram and be acceptable
+optimalCycles th d = snd $ minimumBy compareFst (zip pnlts css) where
+  compareFst (x,_) (y,_) = x `compare` y
+  css = [ext:cs | ext <- allExtMomentPaths d, cs <- possibleCss] where
+    possibleCss = [cs | cs <- subseqsN (cycles d) (nrLoops d),
+                   cs `cyclesCoverGraph` d, cyclesAcceptable th d cs]
+  pnlts = map calcPenalty css where
+    calcPenalty cs = sum $ map (penaltyForSubgraph cs) ds where
+      ds = d:(signSubgraphs th d)  
 
 main = do
   putStrLn "Hello, World!"
