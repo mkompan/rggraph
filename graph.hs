@@ -226,10 +226,11 @@ nrLoops = length . cyclesBasis
 
 -- test if cycle lies inside subgraph
 -- we just need to test if all vertices of cycle belong to subgraph
-cycleLiesIn c d = null $ c \\ nodes d
+cycleLiesIn c d = null $ (fst c) \\ nodes d
 
 -- test if cycle intersects (has common edge) with subgraph
-cycleIntersects c d = not $ null $ intersect (cycleToEdges c) (edges d)   
+cycleIntersects c d =
+  not $ null $ intersect (cycleToEdges $ fst c) (edges d)   
 
 -- internal cycles for subgraph (the ones that lie completely inside) 
 subgraphInternalCycles cs d =
@@ -249,7 +250,7 @@ cycleReverseE c = map (\((a,b),i) -> ((b,a),i)) c
 cyclesCoverGraph cs d = length (edges d') == length es where
   d' = delNode 0 d
   es = foldl1 union cs'
-  cs' = map (\x -> x ++ cycleReverseE x) cs
+  cs' = map (\x -> x ++ cycleReverseE x) (snd $ unzip cs)
   
 -- cycle set is considered acceptable iff each subgraph has no less
 -- internal cycles than it's number of loops
