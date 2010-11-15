@@ -226,7 +226,7 @@ nrLoops = length . cyclesBasis
 
 -- test if cycle lies inside subgraph
 -- we just need to test if all vertices of cycle belong to subgraph
-cycleLiesIn c d = null $ (fst c) \\ nodes d
+cycleLiesIn c d = null $ (fst c) \\ nodes (delNode 0 d)
 
 -- test if cycle intersects (has common edge) with subgraph
 cycleIntersects c d =
