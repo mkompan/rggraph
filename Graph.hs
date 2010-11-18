@@ -1,3 +1,4 @@
+module Graph where
 import Data.Graph.Inductive
 import Data.Graph.Analysis
 import Data.Number.Symbolic
@@ -304,7 +305,4 @@ optimalCycles th d = snd $ minimumBy compareFst (zip pnlts css) where
   pnlts = map calcPenalty css where
     calcPenalty cs = sum $ map (penaltyForSubgraph cs) ds where
       ds = d:(signSubgraphs th d)  
-
-main = do
-  putStrLn "Hello, World!"
 
