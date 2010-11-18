@@ -2,6 +2,7 @@ module Graph where
 import Data.Graph.Inductive
 import Data.Graph.Analysis
 import Data.Number.Symbolic
+import Data.Maybe
 import Char
 import Data.List
 import Control.Monad
@@ -49,7 +50,16 @@ parseChar c (ctxs,edgsIn,edgsOut,nr) =
 
 buildDiagramStr s = foldl (flip (&)) dia_empty (contextsFromStr s)
 
+-- nickel from diagram
+nickelDiagram' d p = foldl addAdj [] p where
+  addAdj l (n,n') = l ++ sort [x | x <- adjNodes, x >= n' || x == 0] where
+    adjNodes = mapMaybe (flip lookup p') (suc d n)
+    p' = (0,0):p
 
+nickelDiagram d =
+  minimum [nickelDiagram' d x | x <- map (\p -> zip p [1..]) perms] where
+  perms = permutations [x | x <- nodes d, x /= 0]
+  
 -- some diagram routines
 
 -- is diagram biconnected?
