@@ -3,6 +3,7 @@ import Data.Graph.Inductive
 import Data.Graph.Analysis
 import Data.Number.Symbolic
 import Data.Maybe
+import Data.Function (on)
 import Char
 import Data.List
 import Control.Monad
@@ -316,3 +317,17 @@ optimalCycles th d = snd $ minimumBy compareFst (zip pnlts css) where
     calcPenalty cs = sum $ map (penaltyForSubgraph cs) ds where
       ds = d:(signSubgraphs th d)  
 
+-- Put moments on the diagram
+diagramAddMoments' :: Diagram -> [([Node],[(Edge,Int)])] -> Diagram
+diagramAddMoments' d cs = mkGraph (labNodes d) edgsWthMs where
+  edgsWthMs = unionBy ((==) `on` (\(a,b,_) -> (a,b))) csEdgsM (labEdges d)
+  csEdgsM = map (\(((a,b),i),m) -> (a,b,(("prop",addZeroMults m),[]))) csEdgsM'
+  csEdgsM' = map (\l -> let (es,ms) = unzip l in (head es,M' ms)) csEdgsGrpd
+  csEdgsGrpd = groupBy ((==) `on` fst) $ sortBy (compare `on` fst) csEdgsTgd
+  csEdgsTgd = concatMap tagCycle cs'
+  cs' = zip [0..] csEdgs
+  csEdgs = (snd . unzip) cs
+  tagCycle (n,c) = zip c (repeat (Plus,n)) ++ zip (cycleReverseE c) (repeat (Minus,n))
+  
+-- version that uses theory to get optimal cycles
+diagramAddMoments th d = diagramAddMoments' d (optimalCycles th d)
