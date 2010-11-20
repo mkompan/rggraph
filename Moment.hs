@@ -12,6 +12,9 @@ type Multiplier = [Int]
 newtype Moment' = M' [(Sign,Int)]
 newtype Moment = M [(Sign,Int,Multiplier)]
 
+emptyMoment' = M' []
+emptyMoment = M []
+
 showOneM 0 = "p"
 showOneM i = "q_" ++ show i
 

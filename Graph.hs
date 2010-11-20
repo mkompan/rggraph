@@ -17,7 +17,7 @@ type Modified a = (a,[Modifier])
 
 type DElemType = [Char]
 
-type DElement = Modified (DElemType, Sym Double)
+type DElement = Modified (DElemType, Moment)
 
 data DNode = ENode
            | INode DElement deriving (Show)
@@ -28,10 +28,10 @@ type Diagram = Gr DNode DLine
 dia_empty = ([],0,ENode,[]) & (empty :: Diagram)
 
 prop :: DLine
-prop = (("prop",0),[])
+prop = (("prop",emptyMoment),[])
 
 vert :: DNode
-vert = INode (("vert",0),[])
+vert = INode (("vert",emptyMoment),[])
 
 contextsFromStr s =
   let (res,_,_,_) = foldl (flip parseChar) ([],[],[],1) s
