@@ -16,7 +16,8 @@ import Moment
 type Modifier = [Char]
 type Modified a = (a,[Modifier])
 
-type DElemType = [Char]
+data DElemType = DVertex
+               | DProp deriving (Show)
 
 type DElement = Modified (DElemType, Moment)
 
@@ -29,10 +30,10 @@ type Diagram = Gr DNode DLine
 dia_empty = ([],0,ENode,[]) & (empty :: Diagram)
 
 prop :: DLine
-prop = (("prop",emptyMoment),[])
+prop = ((DProp,emptyMoment),[])
 
 vert :: DNode
-vert = INode (("vert",emptyMoment),[])
+vert = INode ((DVertex,emptyMoment),[])
 
 contextsFromStr s =
   let (res,_,_,_) = foldl (flip parseChar) ([],[],[],1) s
@@ -321,7 +322,7 @@ optimalCycles th d = snd $ minimumBy compareFst (zip pnlts css) where
 diagramAddMoments' :: Diagram -> [([Node],[(Edge,Int)])] -> Diagram
 diagramAddMoments' d cs = mkGraph (labNodes d) edgsWthMs where
   edgsWthMs = unionBy ((==) `on` (\(a,b,_) -> (a,b))) csEdgsM (labEdges d)
-  csEdgsM = map (\(((a,b),i),m) -> (a,b,(("prop",addZeroMults m),[]))) csEdgsM'
+  csEdgsM = map (\(((a,b),i),m) -> (a,b,((DProp,addZeroMults m),[]))) csEdgsM'
   csEdgsM' = map (\l -> let (es,ms) = unzip l in (head es,M' ms)) csEdgsGrpd
   csEdgsGrpd = groupBy ((==) `on` fst) $ sortBy (compare `on` fst) csEdgsTgd
   csEdgsTgd = concatMap tagCycle cs'
