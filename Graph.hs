@@ -329,3 +329,10 @@ diagramAddMoments' d cs = mkGraph (labNodes d) edgsWthMs where
   
 -- version that uses theory to get optimal cycles
 diagramAddMoments th d = diagramAddMoments' d (optimalCycles th d)
+
+-- compute diagram divergence index
+diagramDivIndex th d = (nrLoops d) * (spaceDimension th) +
+  (sum $ map (\(_,INode ((t,_),_)) -> elementDivIndex th t) (labNodes d')) +
+  (sum $ map (\(_,_,((t,_),_)) -> elementDivIndex th t) edgs) where
+    d' = delNode 0 d
+    edgs = [x | x <- labEdges d', let (a,b,_) = x in a <= b]
