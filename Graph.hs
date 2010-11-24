@@ -16,9 +16,6 @@ import Moment
 type Modifier = [Char]
 type Modified a = (a,[Modifier])
 
-data DElemType = DVertex
-               | DProp deriving (Show)
-
 type DElement = Modified (DElemType, Moment)
 
 data DNode = ENode
