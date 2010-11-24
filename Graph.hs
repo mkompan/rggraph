@@ -336,3 +336,30 @@ diagramDivIndex th d = (nrLoops d) * (spaceDimension th) +
   (sum $ map (\(_,_,((t,_),_)) -> elementDivIndex th t) edgs) where
     d' = delNode 0 d
     edgs = [x | x <- labEdges d', let (a,b,_) = x in a <= b]
+
+-- put a new 2-edge vertex into line
+-- FIXME!! don't care about line tag for now
+diagramAddVertex d e@(a,b) =
+  (edgs,new,vert,edgs) & d' where
+    edgs = [(prop,a),(prop,b)]
+    d' = delEdge e $ delEdge (b,a) d
+    new = noNodes d
+
+-- Diagram with coefficient type
+type CDiagram = (Diagram,Rational)
+
+-- compute the partial derivative by mu square of the diagram
+-- this effectively means sum of diagrams with vertex placed
+-- onto one of the internal lines with inverted sign
+dMuSquare :: CDiagram -> [CDiagram]
+dMuSquare (d,c) =
+  map (\e -> (diagramAddVertex d e,-c)) intEdgs where
+  intEdgs = [(a,b) | (a,b) <- edges $ delNode 0 d, a <= b]
+
+-- try to factorize the result by grouping diagrams with the same nickel
+factorize cds =
+  [(d,c) | (d,c) <- map sumCoefs grpdCds, c /= 0] where
+    grpdCds = groupBy ((==) `on` nickelCDia) $ sortBy (compare `on` nickelCDia) cds
+    nickelCDia = nickelDiagram . fst
+    sumCoefs l = (fst $ head l, sum $ snd $ unzip l)
+  
