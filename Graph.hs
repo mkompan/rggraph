@@ -379,3 +379,27 @@ removeSubgraph d sg = d' where
 calcJ' (d,c) =
   map (\sg -> (removeSubgraph d sg,sg,-c)) sgs where
     sgs = [x | x <- signSubgraphs phi3 d, tailsNr x == 2]
+    
+-- convert diagram with coefficient to nickel with coef
+nickelDC (d,c) = (nickelDiagram d,c)
+
+-- and for pair of diagrams with coef
+nickelDDC (d1,d2,c) =
+  (nickelDiagram d1,nickelDiagram d2,c)
+  
+-- calc J' for n-loop Green function (list of diagrams with coefs)
+greenJ' dcs = [x | dc <- dcs, x <- calcJ' dc]
+
+-- build Green function (as a list of diagrams with coefs) from
+-- string repr
+green = map (\(str,c) -> (buildDiagramStr str,c))
+
+-- this part is a little bit tricky, we want to calculate
+-- NG1*NG2 here (well actually not N but just dMuSquare). 
+-- But I don't really want to expand second multiplier as
+-- we expect to find it as is in J'. So this function
+-- returns list of triples (d1,d2,c) where d1 is expanded
+-- diagram (with dot inserted), d2 is not expanded (it's
+-- supposed that it's still under N) and c is a coefficient.
+greenNxN dcs1 dcs2 =
+  [(d,d2,c2*c) | dc1 <- dcs1, (d2,c2) <- dcs2, (d,c) <- dMuSquare dc1]
