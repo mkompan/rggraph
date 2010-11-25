@@ -407,3 +407,30 @@ green = map (\(str,c) -> (buildDiagramStr str,c))
 -- supposed that it's still under N) and c is a coefficient.
 greenNxN dcs1 dcs2 =
   [(d,d2,c2*c) | dc1 <- dcs1, (d2,c2) <- dcs2, (d,c) <- dMuSquare dc1]
+
+-- multiply all coeffs by factor
+multCoefs x = map (\(d1,d2,c) -> (d1,d2,c*x))
+
+-- factorize by first two elements in triple
+-- TODO: Shouldn't we make it generic?
+factorize2 dcs =
+  [x | x@(_,_,s) <- dcsFctzd, s /= 0] where
+    dcsFctzd = map (\l -> let (a,b,c) = unzip3 l in
+                     (head a,head b,sum c)) dcsGrpd
+    dcsGrpd = groupBy ((==) `on` take2of3) $
+              sortBy (compare `on` take2of3) dcs where
+                take2of3 (x,y,_) = (x,y)
+
+-- we expect J'Gi_n to be proportional to this
+expectedJ' 2 2 = greenNxN (green phi3G2_1) (green phi3G2_1)
+expectedJ' 3 2 = greenNxN (green phi3G3_1) (green phi3G2_1)
+expectedJ' 2 3 = (greenNxN (green phi3G2_2) (green phi3G2_1)) ++
+                 (greenNxN (green phi3G2_1) (green phi3G2_2))
+expectedJ' 3 3 = (greenNxN (green phi3G3_2) (green phi3G2_1)) ++
+                 (greenNxN (green phi3G3_1) (green phi3G2_2))
+expectedJ' 2 4 = (greenNxN (green phi3G2_3) (green phi3G2_1)) ++
+                 (greenNxN (green phi3G2_2) (green phi3G2_2)) ++
+                 (greenNxN (green phi3G2_1) (green phi3G2_3))
+expectedJ' 3 4 = (greenNxN (green phi3G3_3) (green phi3G2_1)) ++
+                 (greenNxN (green phi3G3_2) (green phi3G2_2)) ++
+                 (greenNxN (green phi3G3_1) (green phi3G2_3))
