@@ -362,4 +362,24 @@ factorize cds =
     grpdCds = groupBy ((==) `on` nickelCDia) $ sortBy (compare `on` nickelCDia) cds
     nickelCDia = nickelDiagram . fst
     sumCoefs l = (fst $ head l, sum $ snd $ unzip l)
-  
+
+-- squash subgraph into a single vertex
+removeSubgraph d sg = d' where
+  d' = foldl removeExtNode d'' extNds where
+    removeExtNode d n = foldl addNewEdge d''' nds where
+      (Just (adjNds,_,_,_),d''') = match n d
+      nds = [x | x <- snd $ unzip adjNds, not $ x `elem` extNds]
+      addNewEdge d nd =
+        insEdge (newNd,nd,prop) $ insEdge (nd,newNd,prop) d
+  d'' = insNode (newNd,vert) $ foldl (flip delNode) d intNds
+  (Just ((adj),_,_,_),_) = match 0 sg
+  extNds = snd $ unzip adj
+  intNds = nodes sg \\ (0:extNds)
+  newNd = noNodes d
+
+-- calculate finite part of J action on diagram
+-- result is list of (dotted diagram,diagram,coef)
+-- FIND A CORRECT PLACE FOR ME!! this is very phi3ish
+calcJ' (d,c) =
+  map (\sg -> (removeSubgraph d sg,sg,-c)) sgs where
+    sgs = [x | x <- signSubgraphs phi3 d, tailsNr x == 2]
