@@ -339,10 +339,14 @@ diagramDivIndex th d = (nrLoops d) * (spaceDimension th) +
 
 -- put a new 2-edge vertex into line
 -- FIXME!! don't care about line tag for now
+diagramAddVertex :: Diagram -> Edge -> Diagram
 diagramAddVertex d e@(a,b) =
-  (edgs,new,vert,edgs) & d' where
-    edgs = [(prop,a),(prop,b)]
-    d' = delEdge e $ delEdge (b,a) d
+  mkGraph nds edgs where
+    nds = (new,vert) : labNodes d
+    edgs = (a,new,prop):(new,a,prop):(new,b,prop):(b,new,prop):edgsFltd
+    edgsFltd = deleteBy cmp2of3 (a,b,prop) $ 
+               deleteBy cmp2of3 (b,a,prop) $ labEdges d
+    cmp2of3 = ((==) `on` \(x,y,_) -> (x,y))
     new = noNodes d
 
 -- compute the partial derivative by mu square of the diagram
