@@ -345,13 +345,9 @@ diagramAddVertex d e@(a,b) =
     d' = delEdge e $ delEdge (b,a) d
     new = noNodes d
 
--- Diagram with coefficient type
-type CDiagram = (Diagram,Rational)
-
 -- compute the partial derivative by mu square of the diagram
 -- this effectively means sum of diagrams with vertex placed
 -- onto one of the internal lines with inverted sign
-dMuSquare :: CDiagram -> [CDiagram]
 dMuSquare (d,c) =
   map (\e -> (diagramAddVertex d e,-c)) intEdgs where
   intEdgs = [(a,b) | (a,b) <- edges $ delNode 0 d, a <= b]
