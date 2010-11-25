@@ -16,6 +16,7 @@ phi3G2_1 = [
   ("e11-e-",1/2)
   ]
 
+phi3G3_1 :: [(String,Double)]
 phi3G3_1 = [
   ("e12-e2-e-",1)
   ]
