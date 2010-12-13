@@ -38,3 +38,8 @@ instance Show Moment where
   show = showMoment
   
 addZeroMults (M' m') = M $ map (\(s,c) -> (s,c,[])) m'
+
+-- stretch the moment by a_n factor along given list of basic moments
+momentStretch (M m) n l = M $ map stretchOne m where
+  stretchOne (s,q,a) | q `elem` l = (s,q,n:a)
+                     | otherwise  = (s,q,a)

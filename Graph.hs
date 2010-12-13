@@ -337,6 +337,28 @@ diagramDivIndex th d = (nrLoops d) * (spaceDimension th) +
     d' = delNode 0 d
     edgs = [x | x <- labEdges d', let (a,b,_) = x in a <= b]
 
+-- stretch external moments inside subgraph
+subgraphStretchMoments sg ocs n =
+  emap stretchProp sg where
+    stretchProp ((DProp,m),mods) =
+      ((DProp,momentStretch m n ems),mods) where
+        ems = delete 0 $ subgraphExternalCycles' ocs sg 
+
+-- strecth external moments inside all significant
+-- subgraphs
+diagramStretchMoments th dia =
+  foldl stretchOne dia (zip [1..] $ signSubgraphs th dia) where
+    stretchOne d (n,sg) =
+      mkGraph newNds newEdgs where
+        newNds = (deleteFirstsBy cmpNodes (labNodes d) (labNodes sg)) ++
+                 (labNodes stretchedSg)
+        newEdgs = (deleteFirstsBy cmpEdges (labEdges d) (labEdges sg)) ++
+                  (labEdges stretchedSg)
+        cmpNodes = (==) `on` fst
+        cmpEdges = (==) `on` (\(a,b,_) -> (a,b))
+        stretchedSg = subgraphStretchMoments sg ocs n
+        ocs = optimalCycles th dia
+
 -- put a new 2-edge vertex into line
 -- FIXME!! don't care about line tag for now
 diagramAddVertex :: Diagram -> Edge -> Diagram
