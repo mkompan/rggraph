@@ -19,7 +19,7 @@ type Modified a = (a,[Modifier])
 type DElement = Modified (DElemType, Moment)
 
 data DNode = ENode
-           | INode DElement deriving (Show)
+           | INode DElement deriving (Show,Eq)
 type DLine = DElement
 
 type Diagram = Gr DNode DLine

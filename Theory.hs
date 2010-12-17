@@ -1,7 +1,7 @@
 module Theory where
 
 data DElemType = DVertex
-               | DProp deriving (Show)
+               | DProp deriving (Show,Eq)
 
 data Theory = Th {
   tailsSignDiagram :: [Int],

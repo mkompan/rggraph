@@ -2,15 +2,15 @@ module Moment where
 
 import Data.List
 
-data Sign = Plus | Minus
+data Sign = Plus | Minus deriving (Eq)
 
 instance Show Sign where
   show Plus = "+"
   show Minus = "-"
   
 type Multiplier = [Int]
-newtype Moment' = M' [(Sign,Int)]
-newtype Moment = M [(Sign,Int,Multiplier)]
+newtype Moment' = M' [(Sign,Int)] deriving (Eq)
+newtype Moment = M [(Sign,Int,Multiplier)] deriving (Eq)
 
 emptyMoment' = M' []
 emptyMoment = M []
