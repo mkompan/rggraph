@@ -12,6 +12,7 @@ import Theory
 import Theory.Phi3
 import Theory.Phi4
 import Moment
+import LinComb
 
 type Modifier = [Char]
 type Modified a = (a,[Modifier])
@@ -456,3 +457,33 @@ expectedJ' 2 4 = (greenNxN (green phi3G2_3) (green phi3G2_1)) ++
 expectedJ' 3 4 = (greenNxN (green phi3G3_3) (green phi3G2_1)) ++
                  (greenNxN (green phi3G3_2) (green phi3G2_2)) ++
                  (greenNxN (green phi3G3_1) (green phi3G2_3))
+
+actOnLEdge f (x,y,l) = do
+  l' <- f' l
+  return (x,y,l') where
+    f' l | x==0 || y==0 = return l -- don't act on external lines (TODO mark them with type-constructors)
+         | otherwise = f l
+
+actOnLNode f (x,l) = do
+  l' <- f' l
+  return (x,l') where
+    f' ENode = return ENode
+    f' (INode n) = liftM INode $ f n
+{-
+--this generic code doesn't compile for some reason, so I've added two specific cases
+--graphMap :: (Num b) => ((a -> LinComb b a) -> [a] -> LinComb b [a]) -> (DElement -> LinComb b DElement) -> Diagram -> Diagram
+graphMap mapF f g = do
+  ns <- mapF (actOnLNode f) $ labNodes g
+  es <- mapF (actOnLEdge f) $ [(x,y,l) | (x,y,l) <- labEdges g, x<=y]
+  return $ mkGraph ns es
+-}
+
+graphMapAll f g = do
+  ns <- mapAll (actOnLNode f) $ labNodes g
+  es <- mapAll (actOnLEdge f) $ [(x,y,l) | (x,y,l) <- labEdges g, x<=y]
+  return $ mkGraph ns es
+
+graphMapChain f g = do
+  ns <- mapChain (actOnLNode f) $ labNodes g
+  es <- mapChain (actOnLEdge f) $ [(x,y,l) | (x,y,l) <- labEdges g, x<=y]
+  return $ mkGraph ns es
