@@ -27,16 +27,26 @@ instance (Eq a,Show a,Num b) => Num (LinComb b a) where
 collect :: (Num b,Ord a) => LinComb b a -> LinComb b a
 collect = LC . toList . fromListWith (+) . runLC
   
+expand :: Num b => [LinComb b a] -> LinComb b [a]
+expand ((LC []):_) = LC []
+expand [x] = do
+  a <- x
+  return [a]
+expand (x:xs) = do
+  a <- x
+  as <- expand xs
+  return (a:as)
+
 -- map function a -> LinComb a to every element in
 -- the multiplication (presented as list) at the same
 -- time
-mapAll :: Num b => (a -> LinComb b a) -> [a] -> LinComb b [a]
-mapAll f l = mapM f l
+mapAll :: Num b => (a -> LinComb b c) -> [a] -> LinComb b [c]
+mapAll f = expand . (map f)
 
 -- map function to every element in the multiplication
 -- using the chain rule (for diff-like functions)
 mapChain :: (Eq a,Show a,Num b) => (a -> LinComb b a) -> [a] -> LinComb b [a]
-mapChain f l = sum $ map (\(i,x) -> mapM (actOn i) x) ls where
+mapChain f l = sum $ map (\(i,x) -> mapAll (actOn i) x) ls where
   actOn i (n,x) | i == n = f x
                 | otherwise = return x
   ls = zip [1..n] $ repeat lWithNmbrs
