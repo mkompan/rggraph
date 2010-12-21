@@ -8,8 +8,16 @@ phi3 = Th {
   elementDivIndex = phi3DivIndex
   }
 
-phi3DivIndex DVertex = 0
-phi3DivIndex DProp = -2
+phi3DivIndex' DVertex = 0
+phi3DivIndex' DProp = -2
+
+modsDivIndex "dMu2" = -2
+modsDivIndex "dP" = -1
+modsDivIndex _ = 0 -- that's not quite true cause "dA_*" mods DO change divIndex but we can ignore this
+
+-- FIXME!! actually mods can have different effects for different types of elements
+phi3DivIndex ((t,m),mods) =
+  (phi3DivIndex' t) + (sum $ map modsDivIndex mods)
 
 -- diagrams for some Green functions
 phi3G2_1 = [

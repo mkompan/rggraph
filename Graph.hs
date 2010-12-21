@@ -14,11 +14,6 @@ import Theory.Phi4
 import Moment
 import LinComb
 
-type Modifier = [Char]
-type Modified a = (a,[Modifier])
-
-type DElement = Modified (DElemType, Moment)
-
 data DNode = ENode
            | INode DElement deriving (Show,Eq)
 type DLine = DElement
@@ -333,8 +328,8 @@ diagramAddMoments th d = diagramAddMoments' d (optimalCycles th d)
 
 -- compute diagram divergence index
 diagramDivIndex th d = (nrLoops d) * (spaceDimension th) +
-  (sum $ map (\(_,INode ((t,_),_)) -> elementDivIndex th t) (labNodes d')) +
-  (sum $ map (\(_,_,((t,_),_)) -> elementDivIndex th t) edgs) where
+  (sum $ map (\(_,INode e) -> elementDivIndex th e) (labNodes d')) +
+  (sum $ map (\(_,_,e) -> elementDivIndex th e) edgs) where
     d' = delNode 0 d
     edgs = [x | x <- labEdges d', let (a,b,_) = x in a <= b]
 
