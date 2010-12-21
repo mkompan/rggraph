@@ -3,6 +3,8 @@ module Moment where
 import Data.List
 import Data.Function (on)
 
+import Angles
+
 data Sign = Plus | Minus deriving (Eq)
 
 instance Show Sign where
@@ -64,3 +66,11 @@ isStretchedBy (M m) n = any (elem n) mults where
 
 momentUnStretch (M m) n = M $ map unStretchOne m where
   unStretchOne (s,q,a) = (s,q,delete n a)
+
+stringifySquare (M m) n pairs = intercalate "+" (sqs ++ ps) where
+  sqs =  map makeSquare m where
+    makeSquare (_,q,a) = "(" ++ (show $ M [(Plus,q,a)]) ++ ")^2"
+  ps = map makePaired [x | x <- subsequences m, length x == 2] where
+    makePaired [x@(s,q,a),x'@(s',q',a')] =
+      "2*(" ++ show (M [x]) ++ ")*(" ++ show (M [x']) ++ ")*" ++ cosStr where
+        cosStr = "(" ++ (stringifyCos $ cosP (makePair q q') n pairs) ++ ")"
