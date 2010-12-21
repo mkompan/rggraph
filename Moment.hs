@@ -12,6 +12,14 @@ type Multiplier = [Int]
 newtype Moment' = M' [(Sign,Int)] deriving (Eq)
 newtype Moment = M [(Sign,Int,Multiplier)] deriving (Eq)
 
+instance Num Moment where
+  M a + M b = M (a ++ b)
+  negate = negateMoment
+
+negateMoment (M m) = M $ map negateOne m where
+  negateOne (Plus,p,a) = (Minus,p,a)
+  negateOne (Minus,p,a) = (Plus,p,a)
+
 emptyMoment' = M' []
 emptyMoment = M []
 
