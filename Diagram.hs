@@ -1,5 +1,7 @@
 module Diagram where
 
+import Control.Monad
+
 import Graph hiding (dMuSquare)
 import LinComb
 import Theory
@@ -34,3 +36,15 @@ zeroP (DElement ((t,m),mods)) | "dP" `elem` mods = return $ DElement ((t,m),"zer
 unStretch :: Int -> DExp -> LinComb Rational DExp
 unStretch n (Diagram d) = fmap Diagram $ graphMap mapAll (actOnElement $ unStretch n) d
 unStretch n (DElement ((t,m),mods)) = return $ DElement ((t,m `momentUnStretch` n),mods)
+
+-- power for functions. TODO: Find correct place for me
+power f 0 = id
+power f n = foldl1 (.) $ replicate n f
+
+-- and monadic version
+powerM f 0 = return
+powerM f n = foldl1 (>=>) $ replicate n f
+
+diagramHandleExtMoment th d = return d >>= (powerM dP n) >>= zeroP where
+  n = -diagramDivIndex th d'
+  Diagram d' = d
