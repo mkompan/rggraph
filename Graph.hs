@@ -481,3 +481,18 @@ graphMap mapF f g = do
       esFixed = es ++ map addBackEdge [(x,y,l) | (x,y,l) <- es, x/=y]
       addBackEdge (x,y,((t,m),mds)) = (y,x,((t,-m),mds))
       (ns',es') = partition isGNode els
+
+graphSymbolize g n pairs =
+  (symbolizeVerts g n pairs) ++ "*" ++ (symbolizeProps g n pairs)
+
+symbolizeVerts g n pairs = intercalate "*" $ map symbolizeV ns where
+  (_,ns) = unzip $ labNodes g'
+  g' = delNode 0 g
+  symbolizeV (INode ((DVertex,m),mods)) =
+    "vert(" ++ (stringifySquare m n pairs) ++ "," ++ (show mods) ++ ")"
+
+symbolizeProps g n pairs = intercalate "*" $ map symbolizeP es where
+  (_,_,es) = unzip3 $ labEdges g'
+  g' = delNode 0 g
+  symbolizeP ((DProp,m),mods) =
+    "prop(" ++ (stringifySquare m n pairs) ++ "," ++ (show mods) ++ ")"
