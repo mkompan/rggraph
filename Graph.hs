@@ -494,7 +494,7 @@ symbolizeVerts g n pairs = intercalate "*" $ map symbolizeV ns where
     "vert(" ++ (stringifySquare m n pairs) ++ "," ++ (show mods) ++ ")"
 
 symbolizeProps g n pairs = intercalate "*" $ map symbolizeP es where
-  (_,_,es) = unzip3 $ labEdges g'
+  es = [l | (x,y,l) <- labEdges g', x<=y]
   g' = delNode 0 g
   symbolizeP ((DProp,m),mods) =
     "prop(" ++ (stringifySquare m n pairs) ++ "," ++ (show mods) ++ ")"
