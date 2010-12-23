@@ -13,7 +13,7 @@ instance Show Sign where
   
 type Multiplier = [Int]
 newtype Moment' = M' [(Sign,Int)] deriving (Eq)
-newtype Moment = M [(Sign,Int,Multiplier)] deriving (Eq)
+newtype Moment = M {moments :: [(Sign,Int,Multiplier)]} deriving (Eq)
 
 instance Num Moment where
   M a + M b = M (a ++ b)

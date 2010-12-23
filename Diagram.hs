@@ -1,11 +1,14 @@
 module Diagram where
 
+import Data.Graph.Inductive
 import Control.Monad
 
 import Graph hiding (dMuSquare)
 import LinComb
 import Theory
+import Theory.Phi3
 import Moment
+import Angles
 
 data DExp = Diagram Diagram
           | DElement DElement deriving (Show)
@@ -48,3 +51,33 @@ powerM f n = foldl1 (>=>) $ replicate n f
 diagramHandleExtMoment th d = return d >>= (powerM dP n) >>= zeroP where
   n = -diagramDivIndex th d'
   Diagram d' = d
+
+diagramAllMomentPairs d = pairsMany ls where
+  ls = map (filter (/=0)) ls' -- we will handle ext moment separately
+  ls' = map ((\(_,x,_) -> x).unzip3.moments) ms
+  ms = (map (\(_,INode ((_,m),_)) -> m) $ labNodes d') ++
+       (map (\(_,_,((_,m),_)) -> m) $ labEdges d')
+  d' = delNode 0 d
+
+diagramSignSubgraphsDivIndices th d =
+  zip [1..] (map (diagramDivIndex th) (signSubgraphs th d))
+
+diagramUnStretchUnneeded th d = unStretchOp d where
+  unStretchOp = foldl (>=>) return $ map unStretch idxs
+  idxs = [x | (x,i) <- diagramSignSubgraphsDivIndices th d', i<0]
+  Diagram d' = d
+
+diagramAOps th d =
+  [(x,i) | (x,i) <- diagramSignSubgraphsDivIndices th d', i>=0] where
+    Diagram d' = d
+
+diagramSymbolize d n pairs = graphSymbolize d' n pairs where
+  Diagram d' = d
+
+diagramStrProcess th str =
+  fmap (\d -> (diagramAOps th d,diagramSymbolize d n pairs)) ds where
+    n = nrLoops d'
+    d' = buildDiagramStr str
+    pairs = diagramAllMomentPairs d
+    d = diagramStretchMoments th $ diagramAddMoments th d'
+    ds = (diagramHandleExtMoment th $ Diagram d) >>= dMu2 >>= (diagramUnStretchUnneeded th)
