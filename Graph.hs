@@ -346,13 +346,15 @@ diagramStretchMoments th dia =
   foldl stretchOne dia (zip [1..] $ signSubgraphs th dia) where
     stretchOne d (n,sg) =
       mkGraph newNds newEdgs where
-        newNds = (deleteFirstsBy cmpNodes (labNodes d) (labNodes sg)) ++
-                 (labNodes stretchedSg)
-        newEdgs = (deleteFirstsBy cmpEdges (labEdges d) (labEdges sg)) ++
-                  (labEdges stretchedSg)
+        newNds = (deleteFirstsBy cmpNodes (labNodes d) (labNodes sg')) ++
+                 (labNodes stretchedSg')
+        newEdgs = (deleteFirstsBy cmpEdges (labEdges d) (labEdges sg')) ++
+                  (labEdges stretchedSg')
         cmpNodes = (==) `on` fst
         cmpEdges = (==) `on` (\(a,b,_) -> (a,b))
         stretchedSg = subgraphStretchMoments sg ocs n
+        stretchedSg' = delNode 0 stretchedSg
+        sg' = delNode 0 sg
         ocs = optimalCycles th dia
 
 -- put a new 2-edge vertex into line
