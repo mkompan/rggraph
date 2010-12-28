@@ -74,10 +74,8 @@ diagramAOps th d =
 diagramSymbolize d n pairs = graphSymbolize d' n pairs where
   Diagram d' = d
 
-diagramStrProcess th str =
-  fmap (\d -> (diagramAOps th d,diagramSymbolize d n pairs)) ds where
-    n = nrLoops d'
-    d' = buildDiagramStr str
-    pairs = diagramAllMomentPairs d
-    d = diagramStretchMoments th $ diagramAddMoments th d'
-    ds = (diagramHandleExtMoment th $ Diagram d) >>= dMu2 >>= (diagramUnStretchUnneeded th)
+diagramPutDots th d =
+  (diagramHandleExtMoment th $ Diagram d') >>= dMu2 >>= (diagramUnStretchUnneeded th) where
+    n = nrLoops d
+    pairs = diagramAllMomentPairs d'
+    d' = diagramStretchMoments th $ diagramAddMoments th d
