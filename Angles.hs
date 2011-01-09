@@ -86,3 +86,13 @@ stringifyCos (i,prjs) =
     strOnePrj (x,y) = strCos x ++ "*" ++ strCos y ++ "+" ++
                       strSin x ++ "*" ++ strSin y ++ "*("
     closingBrcts = replicate (length prjs) ')'
+
+-- Jacobian for coordinate transformation
+jacobian n pairs = zip [1..] ls where
+  ls = concatMap (\(n,l) -> replicate (length l) n) nmbrdLayers
+  nmbrdLayers = zip [0..] clsdLayers
+  clsdLayers = closeLayers order $ layerPairs order pairs
+  ((_,order,_),_) = optimalOrder n pairs
+
+stringifyJ as = "r^(d-1)*" ++ (intercalate "*" $ map strOne as) where
+  strOne (a,n) = "(sin(theta_" ++ show a ++ ")^(d-" ++ show (n+2) ++ "))"
