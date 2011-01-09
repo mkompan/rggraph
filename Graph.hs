@@ -15,7 +15,7 @@ import Moment
 import LinComb
 
 data DNode = ENode
-           | INode DElement deriving (Show,Eq)
+           | INode { dNode :: DElement } deriving (Show,Eq)
 type DLine = DElement
 
 type Diagram = Gr DNode DLine
@@ -485,16 +485,12 @@ graphMap mapF f g = do
       (ns',es') = partition isGNode els
 
 graphSymbolize g n pairs =
-  (symbolizeVerts g n pairs) ++ "*" ++ (symbolizeProps g n pairs)
-
-symbolizeVerts g n pairs = intercalate "*" $ map symbolizeV ns where
-  (_,ns) = unzip $ labNodes g'
-  g' = delNode 0 g
-  symbolizeV (INode ((DVertex,m),mods)) =
-    "vert(" ++ (stringifySquare m n pairs) ++ "," ++ (show mods) ++ ")"
-
-symbolizeProps g n pairs = intercalate "*" $ map symbolizeP es where
-  es = [l | (x,y,l) <- labEdges g', x<=y]
-  g' = delNode 0 g
-  symbolizeP ((DProp,m),mods) =
-    "prop(" ++ (stringifySquare m n pairs) ++ "," ++ (show mods) ++ ")"
+  (symbolizeVerts g n pairs) ++ "*" ++ (symbolizeProps g n pairs) where
+    symbolizeVerts g n pairs = intercalate "*" $ map (symbolizeElem . dNode) ns where
+      (_,ns) = unzip $ labNodes g'
+    symbolizeProps g n pairs = intercalate "*" $ map symbolizeElem es where
+      es = [l | (x,y,l) <- labEdges g', x<=y]
+    g' = delNode 0 g
+    symbolizeElem ((DProp,m),[]) = "prop(" ++ (stringifySquare m n pairs) ++ ")"
+    symbolizeElem ((DVertex,m),[]) = "vert(" ++ (stringifySquare m n pairs) ++ ")"
+    symbolizeElem (e,m:ms) = m ++ "(" ++ (symbolizeElem (e,ms)) ++ ")"
