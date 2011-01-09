@@ -4,6 +4,7 @@ import Diagram
 import Graph
 import Theory.Phi3
 import LinComb
+import Angles
 
 printDiagram (Diagram d) = do
   putStr $ show d
@@ -34,3 +35,8 @@ expandS th str =
     pairs = diagramAllMomentPairs d'
     Diagram d' = fst $ head $ runLC ds
 
+printJacobian th str = stringifyJ $ jacobian n pairs where
+  n = nrLoops d
+  pairs = diagramAllMomentPairs d'
+  d = buildDiagramStr str
+  d' = diagramAddMoments th d
