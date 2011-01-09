@@ -29,6 +29,7 @@ emptyMoment = M []
 showOneM 0 = "p"
 showOneM i = "q_" ++ show i
 
+showMoment' (M' []) = "0"
 showMoment' (M' cs) = concatMap showOne cs where
   showOne (s,c) = show s ++ showOneM c
 
@@ -39,6 +40,7 @@ showMultiplier ms =
   concat $ intersperse "*" (map showOne ms) where
     showOne m = "a_" ++ show m
     
+showMoment (M []) = "0"
 showMoment (M cs) = concatMap showOne cs where
   showOne (s,c,mult) = (show s) ++ multStr ++ starStr ++ (showOneM c) where
     starStr | null multStr = ""
@@ -67,6 +69,7 @@ isStretchedBy (M m) n = any (elem n) mults where
 momentUnStretch (M m) n = M $ map unStretchOne m where
   unStretchOne (s,q,a) = (s,q,delete n a)
 
+stringifySquare (M []) n pairs = "0"
 stringifySquare (M m) n pairs = intercalate "+" (sqs ++ ps) where
   sqs =  map makeSquare m where
     makeSquare (_,q,a) = "(" ++ (show $ M [(Plus,q,a)]) ++ ")^2"
