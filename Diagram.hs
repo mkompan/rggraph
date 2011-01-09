@@ -79,3 +79,7 @@ diagramPutDots th d =
     n = nrLoops d
     pairs = diagramAllMomentPairs d'
     d' = diagramStretchMoments th $ diagramAddMoments th d
+
+diagramExpandADiffs th d = aDiffs (diagramAOps th d) d where
+  aDiffs [] = return
+  aDiffs ops = foldl1 (>=>) $ map (\(n,k) -> powerM (dAn n) (k+1)) ops
