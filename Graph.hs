@@ -228,9 +228,22 @@ cyclesBasis d = (cyclesLoops d) ++ (cyclesShort' d) ++ longCs where
     cs = cyclesBasis' $ cyclesLong' d
     makeIndexRepr = head . (flip edgesToIndexed d) . cycleToEdges -- take any possible path
 
+{-
+--This generic version of nrLoops counting number of independent cycles
+--works slow and even worse seems to have some bugs (inside cycleBasis, I think)
+
 -- count number of loops (independent cycles, not 1-loops!!) in diagram
 nrLoops :: Diagram -> Int
 nrLoops = length . cyclesBasis
+
+--so we are going to use this simple implementation that works for phi3
+--right now. In the future we will need to find a generic solution or
+--put this function under Theory
+-}
+nrLoops d = nEdgs - nVrts + 1 where
+  nEdgs = length $ [(x,y) | (x,y) <- edges d', x <= y]
+  nVrts = length $ nodes d'
+  d' = delNode 0 d
 
 -- test if cycle lies inside subgraph
 -- we just need to test if all vertices of cycle belong to subgraph
