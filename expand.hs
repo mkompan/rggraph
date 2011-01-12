@@ -5,4 +5,4 @@ import Theory.Phi3
 
 main = do
   c <- getArgs
-  expandS phi3 $ head c
+  mapM_ putStrLn $ expandS' phi3 $ head c
