@@ -1,5 +1,7 @@
 module Result where
 
+import Data.List
+
 import Diagram
 import Graph
 import Theory.Phi3
@@ -40,3 +42,21 @@ printJacobian th str = stringifyJ $ jacobian n pairs where
   pairs = diagramAllMomentPairs d'
   d = buildDiagramStr str
   d' = diagramAddMoments th d
+
+expandS' th str =
+  map (addAOps . addCoeff) $ runLC $ fmap (\d -> (diagramAOps th d,diagramSymbolize d n pairs)) ds where
+    ds = diagramPutDots th d >>= diagramExpandADiffs th
+    d = buildDiagramStr str
+    n = nrLoops d
+    pairs = diagramAllMomentPairs d'
+    Diagram d' = fst $ head $ runLC ds
+
+addCoeff ((x,s),c) = (x,show (fromRational c) ++ "*" ++ s)
+
+strAOps ops = intercalate "*" $ filter (not . null) $ map strOneOp ops where
+  strOneOp (_,0) = ""
+  strOneOp (n,k) = "(1-a_" ++ show n ++ ")**" ++ show k
+
+addAOps (ops,str) | null strOps = str
+                  | otherwise = strOps ++ "*" ++ str where
+                    strOps = strAOps ops
