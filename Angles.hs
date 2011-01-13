@@ -94,5 +94,6 @@ jacobian n pairs = zip [1..] ls where
   clsdLayers = closeLayers order $ layerPairs order pairs
   ((_,order,_),_) = optimalOrder n pairs
 
+stringifyJ [] = "r**(d-1)"
 stringifyJ as = "r**(d-1)*" ++ (intercalate "*" $ map strOne as) where
   strOne (a,n) = "(sin(theta_" ++ show a ++ ")**(d-" ++ show (n+2) ++ "))"
