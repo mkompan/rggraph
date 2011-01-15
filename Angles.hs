@@ -78,8 +78,8 @@ cosP p@(Pair x y) n pairs =
                        fromJust $ lookup (Pair e y) thetas)) upperLs
     upperLs = take (layer p order) order
 
-strCos i = "cos(theta_" ++ show i ++ ")"
-strSin i = "sin(theta_" ++ show i ++ ")"
+strCos i = "x_" ++ show i
+strSin i = "y_" ++ show i
 
 stringifyCos (i,prjs) =
   (concatMap strOnePrj prjs) ++ strCos i ++ closingBrcts where
@@ -96,4 +96,4 @@ jacobian n pairs = zip [1..] ls where
 
 stringifyJ [] = "r**(d-1)"
 stringifyJ as = "r**(d-1)*" ++ (intercalate "*" $ map strOne as) where
-  strOne (a,n) = "(sin(theta_" ++ show a ++ ")**(d-" ++ show (n+2) ++ "))"
+  strOne (a,n) = "y_" ++ show a ++ "**(d-" ++ show (n+2) ++ ")"
