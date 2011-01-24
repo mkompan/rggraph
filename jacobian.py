@@ -3,13 +3,13 @@ from sympy import *
 
 def jacobian(j,n):
 	if (n == 1):
-		return j.subs({r:q_1})
+		return j*q_1**(d-1)
 	if (n == 2):
-		return (j.subs({r:q_1}))*(j.subs({r:q_2}))
+		return j*q_1**(d-1)*q_2**(d-1)
 	if (n == 3):
-		return (j.subs({r:q_1}))*(j.subs({r:q_2}))*(j.subs({r:q_3}))
+		return j*q_1**(d-1)*q_2**(d-1)*q_3**(d-1)
 	if (n == 4):
-		return (j.subs({r:q_1}))*(j.subs({r:q_2}))*(j.subs({r:q_3}))*(j.subs({r:q_4}))
+		return j*q_1**(d-1)*q_2**(d-1)*q_3**(d-1)*q_4**(d-1)
 	return j
 
 def taylN(e,v,n):
